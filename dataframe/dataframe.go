@@ -1069,7 +1069,7 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 		defaultType: series.String,
 		detectTypes: true,
 		hasHeader:   true,
-		nanValues:   []string{"NA", "NaN", "<nil>"},
+		nanValues:   []string{"NaN", "<nil>"},
 	}
 
 	// Set any custom load options
@@ -1185,7 +1185,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		defaultType: series.String,
 		detectTypes: true,
 		hasHeader:   true,
-		nanValues:   []string{"NA", "NaN", "<nil>"},
+		nanValues:   []string{"NaN", "<nil>"},
 	}
 
 	// Set any custom load options
@@ -1219,22 +1219,17 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	types := make([]series.Type, len(headers))
 	rawcols := make([][]string, len(headers))
 	for i, colname := range headers {
-		t, useCustomType := cfg.types[colname]
 		rawcol := make([]string, len(records))
 		for j := 0; j < len(records); j++ {
 			rawcol[j] = records[j][i]
-			if useCustomType && t == series.String {
-				// skip the convertion when using custom string type
-				continue
-			}
 			if findInStringSlice(rawcol[j], cfg.nanValues) != -1 {
 				rawcol[j] = "NaN"
 			}
 		}
 		rawcols[i] = rawcol
 
-		// try to auto detect the data type
-		if !useCustomType {
+		t, ok := cfg.types[colname]
+		if !ok {
 			t = cfg.defaultType
 			if cfg.detectTypes {
 				if l, err := findType(rawcol); err == nil {
